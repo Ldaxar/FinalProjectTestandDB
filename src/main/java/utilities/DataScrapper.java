@@ -19,6 +19,7 @@ public class DataScrapper {
         };
         File[] files = dir.listFiles(textFilter);
 
+
         
         for (File f : files) {
         	//System.out.println(f.getName() +" new file");
