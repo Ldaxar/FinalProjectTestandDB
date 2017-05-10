@@ -4,13 +4,18 @@ import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.BufferedReader;
 import java.io.IOException;
+
+import cityutilities.CityArray;
+import entities.Book;
+
 import java.io.File;
 
 
 public class DataScrapper {
 
     public static void main(String[] args) throws IOException {
-        String target_dir = "/Users/Stargarth/Desktop/testBook";
+    	CityArray ca = new CityArray("/Users/Stargarth/Desktop/cities");
+    	String target_dir = "/Users/Stargarth/Desktop/books";
         File dir = new File(target_dir);
         FilenameFilter textFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
@@ -19,21 +24,25 @@ public class DataScrapper {
         };
         File[] files = dir.listFiles(textFilter);
 
+        int idCounter=0;
         
         for (File f : files) {
-        	//System.out.println(f.getName() +" new file");
             if(f.isFile()) {
+            	idCounter++;
+            	Book book = new Book(idCounter);
                 BufferedReader inputStream = null;
 
                 try {
                     inputStream = new BufferedReader(
                             new FileReader(f));
                     String line;
-                    String city="";
+                    String word="";
+                    boolean authorFlag=true;
+                    boolean languageFlag=true;
+                    boolean titleFlag=true;
 
                     while ((line = inputStream.readLine()) != null) 
                     {
-                    //	System.out.println(line + " line");
                     	int length=line.length();
                     	for(int i=0;i<length;i++)
                     	{
@@ -44,26 +53,38 @@ public class DataScrapper {
 							{
 								int index=i+1;
 								if (index>=length) break;
-								city+=line.charAt(i);
+								word+=line.charAt(i);
 								asciiValue=(int)line.charAt(index);
-								// ((asciiValue>=65 && asciiValue<=90) || (asciiValue>=97 && asciiValue<=122))
-								//while(line.charAt(index)!=' ')
-								while((asciiValue>=65 && asciiValue<=90) || (asciiValue>=97 && asciiValue<=122))
+								while((asciiValue>=65 && asciiValue<=90) || (asciiValue>=97 && asciiValue<=122) || (asciiValue==58))
 								{
-									city+=line.charAt(index);
+									word+=line.charAt(index);
 									index+=1;
 									if (index>=length) break;
 									asciiValue=(int)line.charAt(index);
 								}
-								System.out.println(city);
-								city="";
+								if (ca.contains(word)) book.addCity(word);
+								else if (word.toLowerCase().equals("author:") && authorFlag) 
+								{
+									book.setAuthor(line.substring(8, line.length()));
+									authorFlag=false;
+								}
+								else if (word.toLowerCase().equals("title:") && titleFlag) 
+								{
+									book.setTitle(line.substring(7, line.length()));
+									titleFlag=false;
+								}
+								else if (word.toLowerCase().equals("language:") && languageFlag) 
+								{
+									book.setLanguage(line.substring(10, line.length()));
+									languageFlag=false;
+								}
+								word="";
 								i=i+(index-i);
 							}
                     	}
 
 
 
-                      //  System.out.println(line);
                     }
                 }
                 finally {
@@ -71,6 +92,8 @@ public class DataScrapper {
                         inputStream.close();
                     }
                 }
+                System.out.println(book.toString());
+                System.out.println("----------------------------------------------------");
             }
         }
     }
